@@ -1,13 +1,12 @@
 import os
 import sys
 import torch
-import random
 import torch.backends.cudnn as cudnn
 import torch.optim as optim
 from torch.utils.data import DataLoader
 import numpy as np
 from utils.data_loader import get_dataset
-from model.modelV2 import DANN
+from model.model_transformer import DANN
 from utils.utils import split_dataset, optimizer_scheduler
 from test import test
 from torch.utils.tensorboard import SummaryWriter
@@ -16,28 +15,28 @@ source_dataset_name = 'sunny'
 target_dataset_name = 'snowy'
 source_dataset_root = os.path.join('dataset/', source_dataset_name)
 target_dataset_root = os.path.join('dataset/', target_dataset_name)
-model_root = 'exp_conv/models_snowy2/'
+model_root = 'exp_trans/models'
 
 # add summeryWriter
-train_writer = SummaryWriter(log_dir=model_root + "tb/train")
-test_writer = SummaryWriter(log_dir=model_root + "tb/test")
+train_writer = SummaryWriter(log_dir=model_root + "/tb/train")
+test_writer = SummaryWriter(log_dir=model_root + "/tb/test")
 
 cuda = True
 cudnn.benchmark = True
-lr = 5e-4
+lr = 1e-4
 theta = 1
-batch_size = 16
-n_epoch = 200
+batch_size = 32
+n_epoch = 100
 
-manual_seed = random.randint(1, 10000)
-random.seed(manual_seed)
-torch.manual_seed(manual_seed)
+# manual_seed = random.randint(1, 10000)
+# random.seed(manual_seed)
+# torch.manual_seed(manual_seed)
 
 # load model
 my_net = DANN()
 
 # setup optimizer
-optimizer = optim.Adam(my_net.parameters(), lr=lr, betas=(0.9, 0.999))
+optimizer = optim.Adam(my_net.parameters(), lr=lr)
 
 # load data
 source_data_files = [os.path.join(source_dataset_root, file) for file in os.listdir(source_dataset_root) if file.endswith('.mat')]
@@ -93,7 +92,7 @@ for epoch in range(n_epoch):
         data_source = data_source_iter.__next__()
         s_img, s_label = data_source
 
-        # optimizer, lr_current = optimizer_scheduler(optimizer=optimizer, lr=lr,p=p)
+        optimizer, lr_current = optimizer_scheduler(optimizer=optimizer, lr=lr,p=p)
         optimizer.zero_grad()
 
         batch_size = len(s_label)
@@ -155,8 +154,7 @@ for epoch in range(n_epoch):
         train_writer.add_scalar(tag="loss_training/domain", scalar_value=err_t_domain + err_s_domain, global_step=epoch * len_dataloader + i)
         train_writer.add_scalar(tag="loss_training/class", scalar_value=err_s_label, global_step=epoch * len_dataloader + i)
         train_writer.add_scalar(tag="params/alpha", scalar_value=alpha, global_step=epoch * len_dataloader + i)
-        # train_writer.add_scalar(tag="params/lr_current", scalar_value=lr_current, global_step=epoch * len_dataloader + i)
-
+        train_writer.add_scalar(tag="params/lr_current", scalar_value=lr_current, global_step=epoch * len_dataloader + i)
 
     #################### training summary in one epoch ############################
     print('\n')

@@ -42,7 +42,7 @@ docker build -t pytorch_dann .
 docker run -it --runtime=nvidia \
   -u $(id -u):$(id -g) \
   -v /YOUR/DANN/PROJECT/dataset:/DANN/dataset \
-  -v /YOUR/DANN/PROJECT/models:/DANN/models \
+  -v /YOUR/DANN/PROJECT/models_rmsprop:/DANN/models_rmsprop \
   pytorch_dann:latest \
   python main.py
 
