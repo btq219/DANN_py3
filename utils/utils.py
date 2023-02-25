@@ -32,3 +32,5 @@ def optimizer_scheduler(optimizer, lr,p, alpha=10, beta=0.75):
         lr = lr / (1. + alpha * p) ** beta
 
     return optimizer, lr
+
+
